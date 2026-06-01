@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>深井访谈 · 空间记忆知识图谱</title>
+  <link rel="icon" href="data:,">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    /* ================= 基础样式 ================= */
+    body {
+      margin: 0;
+      font-family: 'Noto Serif SC', 'STSong', 'SimSun', serif;
+      background:
+        radial-gradient(circle at 48% 42%, rgba(41, 255, 71, 0.09), transparent 32%),
+        radial-gradient(circle at 68% 28%, rgba(212, 175, 55, 0.08), transparent 24%),
+        linear-gradient(180deg, #020707, #081113 58%, #020506);
+      overflow: hidden; /* 防止出现滚动条，交由D3缩放控制 */
+    }
+
+    /* 知识图谱容器 */
+    #knowledge-graph-page {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      opacity: 0;
+      transition: opacity 1s ease-in;
+      pointer-events: none; /* 初始不可点击 */
+      overflow: hidden;
+    }
+    
+    #knowledge-graph-page.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #knowledge-graph-page::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.2);
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    #map-underlay { display: none; }
+
+    svg {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab; /* 抓手图标 */
+    }
+    svg:active {
+      cursor: grabbing;
+    }
+
+    /* ================= 节点与连线样式 ================= */
+    /* 连线 */
+    .link {
+      stroke: #8b6f47;
+      stroke-opacity: 0.6;
+      stroke-width: 1.5px;
+      transition: stroke-opacity 0.3s, stroke-width 0.3s;
+    }
+    
+    /* 连线文字 */
+    .link-label {
+      pointer-events: none;
+      font-size: 8px;
+      fill: #D4AF37;
+      font-family: 'Noto Serif SC', serif;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+      background-color: rgba(0,0,0,0.5); /* 增加背景增加可读性 */
+      padding: 2px;
+      transition: opacity 0.3s;
+    }
+
+    /* 节点通用 */
+    .node {
+      transition: opacity 0.3s;
+      cursor: pointer;
+    }
+    
+    .node circle {
+      stroke: #8b6f47;
+      stroke-width: 2px;
+      filter: drop-shadow(0 0 5px rgba(139, 111, 71, 0.5));
+      transition: transform 0.2s, r 0.2s;
+    }
+
+    .node:hover circle {
+      transform: scale(1.2);
+      stroke: #f4cfb8;
+    }
+
+    .node text {
+      font-size: 10px;
+      pointer-events: none;
+      fill: #D4AF37;
+      font-weight: 500;
+      text-shadow: 0 0 3px rgba(0, 0, 0, 0.9);
+      transition: font-size 0.2s;
+    }
+
+    /* 特定类型颜色 */
+    g.node[data-type="Emotion"] text { fill: #E45756 !important; }
+    g.node[data-type="Person"] text { fill: #d98665 !important; }
+
+    /* ================= 空间节点 (命令行卡片) ================= */
+    .space-card {
+      fill: rgba(94, 47, 35, 0.82);
+      stroke: rgba(239, 139, 94, 0.72);
+      stroke-width: 1.4;
+      filter: drop-shadow(0 0 10px rgba(207, 109, 82, 0.24));
+      transition: stroke-width 0.2s, filter 0.2s;
+    }
+    
+    .node:hover .space-card {
+      stroke-width: 2.5;
+      filter: drop-shadow(0 0 20px rgba(239, 139, 94, 0.45));
+    }
+
+    .terminal-title-bar { fill: rgba(128, 64, 46, 0.94); }
+    .terminal-title-text, .terminal-prompt, .terminal-text {
+      font-family: 'Courier New', monospace;
+      fill: #ffe5d1 !important;
+      pointer-events: none;
+    }
+    .space-node-label {
+      fill: #ffe5d1 !important;
+      font-family: 'Courier New', monospace !important;
+      text-shadow: 0 0 2px rgba(0,0,0,1);
+    }
+    
+    /* 交互时的淡化效果类 */
+    .faded {
+      opacity: 0.1 !important;
+    }
+    .highlight {
+      opacity: 1 !important;
+    }
+
+    /* ================= 界面控件 ================= */
+    
+    /* 搜索框 */
+    .search-container {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 100;
+      display: flex;
+      gap: 10px;
+      opacity: 0;
+      transition: opacity 1s 1s; /* 延迟显示 */
+    }
+    #knowledge-graph-page.visible .search-container {
+      opacity: 1;
+    }
+
+    .search-input {
+      background: rgba(13, 17, 23, 0.8);
+      border: 1px solid rgba(217, 134, 101, 0.75);
+      color: #f4cfb8;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      width: 200px;
+      outline: none;
+      box-shadow: 0 0 14px rgba(207, 109, 82, 0.18);
+    }
+    .search-input::placeholder { color: rgba(244, 207, 184, 0.48); }
+
+    /* 上传面板 */
+    .upload-panel {
+      position: fixed;
+      top: 60px; /* 移到搜索框下方 */
+      right: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 1000;
+      min-width: 300px;
+      max-height: 80vh;
+      overflow-y: auto;
+      backdrop-filter: blur(5px);
+      border: 1px solid #D4AF37;
+      display: none; /* 嵌入主站时默认隐藏管理面板 */
+    }
+    .toggle-btn {
+      position: absolute; top: 10px; right: 10px;
+      background: #999; color: white; border: none; 
+      border-radius: 50%; width: 24px; height: 24px; cursor: pointer;
+    }
+
+    /* 管理按钮 */
+    .btn-manage {
+      position: fixed; 
+      top: 20px; 
+      right: 20px; 
+      z-index: 999; 
+      padding: 8px 15px; 
+      background: rgba(13, 17, 23, 0.8);
+      color: #f4cfb8; 
+      border: 1px solid rgba(217, 134, 101, 0.75);
+      border-radius: 4px; 
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      transition: all 0.3s;
+      opacity: 0;
+      display: none; /* 嵌入主站时隐藏管理按钮 */
+    }
+    #knowledge-graph-page.visible .btn-manage {
+      opacity: 1;
+    }
+    .btn-manage:hover {
+      background: rgba(207, 109, 82, 0.22);
+      color: #ffe3cf;
+      box-shadow: 0 0 18px rgba(207, 109, 82, 0.35);
+    }
+
+    /* ================= 封面页 ================= */
+    #landing-page {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #000;
+      background-size: cover;
+      background-position: center;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 1s ease-out, visibility 1s;
+    }
+    #landing-page.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .landing-title {
+      font-size: min(8vw, 120px); /* 响应式字体，最大120px */
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(255,255,255,0.8), 0 0 40px rgba(0,255,0,0.5);
+      cursor: pointer;
+      transition: all 0.5s ease;
+      letter-spacing: 8px;
+      animation: breathe 3s infinite ease-in-out;
+    }
+    @keyframes breathe {
+      0%, 100% { text-shadow: 0 0 20px rgba(255,255,255,0.6), 0 0 40px rgba(0,255,0,0.3); transform: scale(1); }
+      50% { text-shadow: 0 0 30px rgba(255,255,255,1), 0 0 60px rgba(0,255,0,0.8); transform: scale(1.02); }
+    }
+    .landing-subtitle { color: rgba(255,255,255,0.7); font-family: monospace; letter-spacing: 2px; }
+  </style>
+</head>
+<body>
+
+  <div id="landing-page" class="hidden">
+    <div class="landing-content" style="text-align: center;">
+      <h1 class="landing-title" id="memory-realm-title">404 NOT FOUND</h1>
+      <p class="landing-subtitle">The Realm of Memory</p>
+      <p class="landing-description" style="color: #888; margin-top: 20px;">空间场所记忆的交互叙事</p>
+    </div>
+  </div>
+
+  <div class="search-container">
+    <input type="text" id="searchNode" class="search-input" list="nodeList" placeholder="搜索节点 (Search)...">
+    <datalist id="nodeList"></datalist>
+  </div>
+  
+  <button onclick="toggleUploadPanel()" class="btn-manage">⚙ 配置</button>
+
+  <div id="uploadPanel" class="upload-panel" style="display: none;">
+    <button class="toggle-btn" onclick="toggleUploadPanel()">×</button>
+    <h3 style="color: #D4AF37; margin-top: 0;">数据与图片管理</h3>
+    
+    <label>选择空间节点：</label>
+    <select id="nodeSelect" style="width: 100%; margin: 5px 0; padding: 5px;">
+      <option value="">选择节点...</option>
+    </select>
+    
+    <div style="margin: 10px 0; border: 1px dashed #ccc; padding: 10px; text-align: center;">
+      <input type="file" id="imageInput" accept="image/*" style="width: 100%;">
+      <div id="imagePreview" style="margin-top: 10px; max-height: 150px; overflow: hidden;"></div>
+    </div>
+    
+    <div style="display: flex; gap: 5px;">
+      <button onclick="uploadImage()" style="flex: 1;">上传图片</button>
+      <button onclick="clearImage()" style="flex: 1; background: #E45756;">清除图片</button>
+    </div>
+    
+    <hr style="margin: 15px 0; border-color: #eee;">
+    <p style="font-size: 12px; color: #666;">数据备份：</p>
+    <button onclick="exportGraph()" style="width: 100%;">导出图谱 (JSON)</button>
+    <button onclick="importGraph()" style="width: 100%; margin-top: 5px;">导入图谱</button>
+    <button onclick="exportImages()" style="width: 100%; margin-top: 8px;">导出图片库 (JSON)</button>
+    <button onclick="importImages()" style="width: 100%; margin-top: 5px;">导入图片库</button>
+  </div>
+
+  <div id="knowledge-graph-page" class="visible">
+    <div id="map-underlay">
+      <iframe
+        title="地图底图"
+        src="https://www.openstreetmap.org/export/embed.html?bbox=113.38%2C23.05%2C113.46%2C23.11&layer=mapnik&marker=23.08%2C113.42">
+      </iframe>
+    </div>
+    <svg id="graph-svg">
+        <g id="graph-container"></g>
+    </svg>
+  </div>
+
+<script>
+/* ========= 全局配置 ========= */
+const CONFIG = {
+  dbName: 'knowledgeGraphDB',
+  dbVersion: 2,
+  spatialProjection: {
+    enabled: true,
+    padding: 100
+  },
+  mapUnderlay: {
+    enabled: true,
+    opacity: 0.52
+  },
+  // 颜色映射
+  colors: {
+    Person: "#d98665",
+    Space: "#e99f7a",
+    Emotion: "#E45756",
+    Event: "#72B7B2",
+    Infrastructure: "#4C6FFF",
+    Policy: "#D62728",
+    Activity: "#FF7F0E",
+    Object: "#9467BD",
+    Community: "#b8917f",
+    Default: "#999"
+  },
+  // 三元组关系（谓语）类型：用于补全/规范化旧数据
+  predicateRules: [
+    { re: /拥有|房产/, type: "归属" },
+    { re: /居住/, type: "居住" },
+    { re: /经营/, type: "经营" },
+    { re: /在.*活动|游玩|打羽毛球|散步|参与/, type: "活动" },
+    { re: /提及|回忆|关注|认为|怀念/, type: "叙事/记忆" },
+    { re: /影响|导致|受影响|减少|停运|开通|搬迁|发生/, type: "影响/因果" },
+    { re: /管理|服务|工作|照看/, type: "角色/管理" },
+    { re: /位于/, type: "空间包含" },
+    { re: /情绪|感到|体验/, type: "情绪" },
+  ]
+};
+
+/* ========= 三元组补全/规范化 ========= */
+function normalizeGraphTriples(graph) {
+  if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.links)) return graph;
+
+  // 统一 link 的三元字段：subject/source, predicate(label+predicateType), object/target + 证据字段
+  graph.links = graph.links.map((l) => {
+    const source = typeof l.source === 'object' ? l.source.id : l.source;
+    const target = typeof l.target === 'object' ? l.target.id : l.target;
+    const label = (l.label ?? "").toString();
+
+    let predicateType = l.predicateType;
+    if (!predicateType) {
+      const rule = CONFIG.predicateRules.find(r => r.re.test(label));
+      predicateType = rule ? rule.type : "其他";
+    }
+
+    return {
+      ...l,
+      source,
+      target,
+      label,
+      predicateType,
+      // 可选证据字段：不影响现有可视化，但用于三元法论文/导出
+      time: l.time ?? "",           // e.g. "三年前" / "2019-2021"
+      interviewee: l.interviewee ?? "", // e.g. "P03" 或受访者编号
+      quote: l.quote ?? "",         // 原话摘录
+      confidence: typeof l.confidence === 'number' ? l.confidence : 0.7,
+      polarity: typeof l.polarity === 'number' ? l.polarity : 0, // -1~1
+      intensity: typeof l.intensity === 'number' ? l.intensity : 0.5 // 0~1
+    };
+  });
+
+  return graph;
+}
+
+function ensureEmotionLayer(graph) {
+  if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.links)) return graph;
+
+  const nodeIds = new Set(graph.nodes.map(n => n.id));
+  const addNodeIfMissing = (node) => {
+    if (!nodeIds.has(node.id)) {
+      graph.nodes.push(node);
+      nodeIds.add(node.id);
+    }
+  };
+  const linkKey = (s, t, label) => `${s}__${t}__${label}`;
+  const linkIds = new Set(graph.links.map(l => {
+    const s = typeof l.source === 'object' ? l.source.id : l.source;
+    const t = typeof l.target === 'object' ? l.target.id : l.target;
+    return linkKey(s, t, (l.label ?? "").toString());
+  }));
+  const addLinkIfMissing = (l) => {
+    const key = linkKey(l.source, l.target, l.label);
+    if (linkIds.has(key)) return;
+    graph.links.push(l);
+    linkIds.add(key);
+  };
+
+  // 1) 情绪节点
+  const emotionNodes = [
+    { id: "EM01", label: "怀旧/眷恋", type: "Emotion" },
+    { id: "EM02", label: "失落", type: "Emotion" },
+    { id: "EM03", label: "无奈", type: "Emotion" },
+    { id: "EM04", label: "焦虑", type: "Emotion" },
+    { id: "EM05", label: "安全感", type: "Emotion" },
+    { id: "EM06", label: "归属感", type: "Emotion" },
+    { id: "EM07", label: "自豪/认同", type: "Emotion" },
+    { id: "EM08", label: "期待/希望", type: "Emotion" },
+  ];
+  emotionNodes.forEach(addNodeIfMissing);
+
+  // 2) 情绪连线（与现有节点连接）
+  [
+    { source: "P05", target: "EM01", label: "感到", predicateType: "情绪", confidence: 0.7 },
+    { source: "P05", target: "EM06", label: "感到", predicateType: "情绪", confidence: 0.7 },
+    { source: "P02", target: "EM04", label: "感到", predicateType: "情绪", confidence: 0.7 },
+    { source: "P03", target: "EM02", label: "感到", predicateType: "情绪", confidence: 0.7 },
+    { source: "C02", target: "EM04", label: "感到", predicateType: "情绪", confidence: 0.7 },
+    { source: "P10", target: "EM07", label: "感到", predicateType: "情绪", confidence: 0.7 },
+    { source: "P07", target: "EM05", label: "感到", predicateType: "情绪", confidence: 0.7 },
+    { source: "P08", target: "EM03", label: "感到", predicateType: "情绪", confidence: 0.7 },
+    { source: "P04", target: "EM08", label: "感到", predicateType: "情绪", confidence: 0.7 },
+    { source: "EM01", target: "S06", label: "指向", predicateType: "情绪", confidence: 0.7 },
+    { source: "EM06", target: "S06", label: "指向", predicateType: "情绪", confidence: 0.7 },
+    { source: "EM04", target: "E06", label: "因", predicateType: "情绪", confidence: 0.7 },
+    { source: "EM02", target: "E09", label: "因", predicateType: "情绪", confidence: 0.7 },
+    { source: "EM03", target: "E09", label: "因", predicateType: "情绪", confidence: 0.7 },
+    { source: "EM05", target: "S05", label: "指向", predicateType: "情绪", confidence: 0.7 },
+    { source: "EM07", target: "S10", label: "指向", predicateType: "情绪", confidence: 0.7 },
+    { source: "EM08", target: "S08", label: "指向", predicateType: "情绪", confidence: 0.7 },
+  ].forEach(addLinkIfMissing);
+
+  return graph;
+}
+
+function ensureCoreNodes(graph) {
+  if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.links)) return graph;
+
+  const nodeIds = new Set(graph.nodes.map(n => n.id));
+  const neededIds = new Set();
+  graph.links.forEach(l => {
+    const s = typeof l.source === 'object' ? l.source.id : l.source;
+    const t = typeof l.target === 'object' ? l.target.id : l.target;
+    if (s) neededIds.add(s);
+    if (t) neededIds.add(t);
+  });
+
+  // 如果 defaultGraph 存在，则优先从默认图里补模板节点
+  const templateMap = (typeof defaultGraph !== 'undefined' && Array.isArray(defaultGraph.nodes))
+    ? new Map(defaultGraph.nodes.map(n => [n.id, n]))
+    : new Map();
+
+  neededIds.forEach(id => {
+    if (nodeIds.has(id)) return;
+    if (templateMap.has(id)) {
+      const tpl = templateMap.get(id);
+      graph.nodes.push({ ...tpl });
+      nodeIds.add(id);
+    }
+  });
+
+  return graph;
+}
+
+function getSpaceGeoNodes(nodes) {
+  return (nodes || []).filter(n =>
+    n.type === 'Space' &&
+    n.geo &&
+    Number.isFinite(n.geo.lng) &&
+    Number.isFinite(n.geo.lat)
+  );
+}
+
+function getGeoBounds(geoNodes) {
+  if (!geoNodes || geoNodes.length < 2) return null;
+  const lngs = geoNodes.map(n => n.geo.lng);
+  const lats = geoNodes.map(n => n.geo.lat);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  if (minLng === maxLng || minLat === maxLat) return null;
+  return { minLng, maxLng, minLat, maxLat };
+}
+
+function projectByGeo(lng, lat, bounds, width, height, padding) {
+  const innerW = Math.max(1, width - padding * 2);
+  const innerH = Math.max(1, height - padding * 2);
+  const nx = (lng - bounds.minLng) / (bounds.maxLng - bounds.minLng);
+  const ny = (bounds.maxLat - lat) / (bounds.maxLat - bounds.minLat);
+  return {
+    x: padding + nx * innerW,
+    y: padding + ny * innerH
+  };
+}
+
+function buildStaticMapUrl(bounds) {
+  const padLng = (bounds.maxLng - bounds.minLng) * 0.08;
+  const padLat = (bounds.maxLat - bounds.minLat) * 0.08;
+  const minLng = bounds.minLng - padLng;
+  const maxLng = bounds.maxLng + padLng;
+  const minLat = bounds.minLat - padLat;
+  const maxLat = bounds.maxLat + padLat;
+  return `https://staticmap.openstreetmap.de/staticmap.php?bbox=${minLng},${minLat},${maxLng},${maxLat}&size=1600x1200&maptype=mapnik`;
+}
+
+/* ========= 数据库管理 (IndexedDB) ========= */
+class DatabaseManager {
+  constructor() {
+    this.db = null;
+  }
+
+  async init() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(CONFIG.dbName, CONFIG.dbVersion);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve(this.db);
+      };
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('nodes')) db.createObjectStore('nodes', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('links')) db.createObjectStore('links', { keyPath: 'id', autoIncrement: true });
+        if (!db.objectStoreNames.contains('images')) db.createObjectStore('images', { keyPath: 'nodeId' });
+      };
+    });
+  }
+
+  async loadData() {
+    if (!this.db) await this.init();
+    const nodes = await this._getAll('nodes');
+    const links = await this._getAll('links');
+    const images = await this._getAll('images');
+    
+    // 将图片数据合并回节点
+    if (images.length > 0) {
+      const imgMap = new Map(images.map(i => [i.nodeId, i.data]));
+      nodes.forEach(n => {
+        if (imgMap.has(n.id)) n.image = imgMap.get(n.id);
+      });
+    }
+    
+    return { nodes, links };
+  }
+
+  async saveData(graph) {
+    if (!this.db) await this.init();
+    const t = this.db.transaction(['nodes', 'links'], 'readwrite');
+    t.objectStore('nodes').clear();
+    t.objectStore('links').clear();
+    graph.nodes.forEach(n => t.objectStore('nodes').add(n));
+    // 确保链接保存时是纯ID引用，不是对象引用（D3会修改对象）
+    graph.links.forEach((l, i) => {
+      const cleanLink = {
+        source: typeof l.source === 'object' ? l.source.id : l.source,
+        target: typeof l.target === 'object' ? l.target.id : l.target,
+        label: l.label,
+        predicateType: l.predicateType,
+        time: l.time,
+        interviewee: l.interviewee,
+        quote: l.quote,
+        confidence: l.confidence,
+        polarity: l.polarity,
+        intensity: l.intensity,
+        id: i
+      };
+      t.objectStore('links').add(cleanLink);
+    });
+    return new Promise(resolve => t.oncomplete = resolve);
+  }
+
+  async saveImage(nodeId, base64) {
+    if (!this.db) await this.init();
+    const t = this.db.transaction(['images'], 'readwrite');
+    t.objectStore('images').put({ nodeId, data: base64, timestamp: new Date() });
+    return new Promise(resolve => t.oncomplete = resolve);
+  }
+
+  async deleteImage(nodeId) {
+     if (!this.db) await this.init();
+     const t = this.db.transaction(['images'], 'readwrite');
+     t.objectStore('images').delete(nodeId);
+     return new Promise(resolve => t.oncomplete = resolve);
+  }
+  
+  async _getAll(storeName) {
+    return new Promise((resolve) => {
+      const t = this.db.transaction(storeName, 'readonly');
+      const req = t.objectStore(storeName).getAll();
+      req.onsuccess = () => resolve(req.result);
+    });
+  }
+}
+
+/* ========= 默认数据 ========= */
+const defaultGraph = {
+  nodes: [
+    { id: "P01", label: "本地房东", type: "Person" },
+    { id: "P02", label: "文玩店主", type: "Person" },
+    { id: "P03", label: "小吃店主", type: "Person" },
+    { id: "P04", label: "咖啡店主", type: "Person" },
+    { id: "P05", label: "安来市原住民", type: "Person" },
+    { id: "P07", label: "小孩家长", type: "Person" },
+    { id: "P08", label: "小学保安", type: "Person" },
+    { id: "P09", label: "安来市理发店主", type: "Person" },
+    { id: "P10", label: "小朋友", type: "Person" },
+    { id: "S01", label: "深井码头", type: "Space", image: "images/深井码头/64a8c87aac53793493ddebe99f2b31fe.jpg", geo: { lng: 113.42, lat: 23.08 } },
+    { id: "S02", label: "时光公园", type: "Space", image: "images/时光公园/02db10acb0575301866f5a5a8a078b27.jpg", geo: { lng: 113.42, lat: 23.08 } },
+    { id: "S03", label: "安来市商业街", type: "Space", image: "images/安来市商业街/668d46250af1d08c0759edb7a032cdfe.jpg", geo: { lng: 113.42, lat: 23.08 } },
+    { id: "S04", label: "深井小学老校区", type: "Space", image: "images/深井小学老校区/49ac55c5e315e0a8dd20cb815bbee650.jpg", geo: { lng: 113.42, lat: 23.08 } },
+    { id: "S05", label: "深井小学新校区", type: "Space", image: "images/深井小学新校区/3bfe2c16a38c9993e338586257700903.jpg", geo: { lng: 113.42, lat: 23.08 } },
+    { id: "S06", label: "深井古村", type: "Space", image: "images/深井古村/4266e0008cc8a63597e9677ba6596ebb.jpg", geo: { lng: 113.42, lat: 23.08 } },
+    { id: "S07", label: "祠堂", type: "Space", image: "images/祠堂/27ad11e12e7bbdec2e729eaa65e5f06e.jpg", geo: { lng: 113.42, lat: 23.08 } },
+    { id: "S08", label: "鼎新书院", type: "Space", image: "images/书院/8e5fdfb1fa5ba2e16279761b0d28d77d.jpg", geo: { lng: 113.42, lat: 23.08 } },
+    { id: "S10", label: "深井公园", type: "Space", image: "images/深井公园/4a017ef96a9900272791ade8388c5ff4.jpg", geo: { lng: 113.42, lat: 23.08 } },
+    { id: "S14", label: "幼儿园", type: "Space", image: "images/幼儿园/微信图片_20260105231955_93_39.jpg", geo: { lng: 113.42, lat: 23.08 } },
+    { id: "I01", label: "水巴S05航线", type: "Infrastructure" },
+    { id: "I02", label: "S10公交线", type: "Infrastructure" },
+    { id: "I03", label: "地铁线路", type: "Infrastructure" },
+    { id: "A01", label: "码头散步", type: "Activity" },
+    { id: "A02", label: "公园打羽毛球", type: "Activity" },
+    { id: "O01", label: "深井码头旧招牌", type: "Object" },
+    { id: "C01", label: "本地宗族", type: "Community" },
+    { id: "C02", label: "家长群体", type: "Community" },
+    { id: "EM01", label: "怀旧/眷恋", type: "Emotion" },
+    { id: "EM02", label: "失落", type: "Emotion" },
+    { id: "EM03", label: "无奈", type: "Emotion" },
+    { id: "EM04", label: "焦虑", type: "Emotion" },
+    { id: "EM05", label: "安全感", type: "Emotion" },
+    { id: "EM06", label: "归属感", type: "Emotion" },
+    { id: "EM07", label: "自豪/认同", type: "Emotion" },
+    { id: "EM08", label: "期待/希望", type: "Emotion" },
+    { id: "E06", label: "水巴S05停运", type: "Event" },
+    { id: "E07", label: "S10航线停运", type: "Event" },
+    { id: "E08", label: "地铁开通", type: "Event" },
+    { id: "E09", label: "小学搬迁", type: "Event" }
+  ],
+  links: [
+    { source: "P01", target: "S01", label: "拥有房产" },
+    { source: "P01", target: "S02", label: "在公园活动" },
+    { source: "P01", target: "S06", label: "提及深井古村" },
+    { source: "P02", target: "S03", label: "在商业街经营" },
+    { source: "P02", target: "S01", label: "因码头停运受影响" },
+    { source: "P02", target: "E06", label: "因水巴停运受影响" },
+    { source: "P03", target: "S04", label: "小孩曾在老校区" },
+    { source: "P03", target: "S05", label: "小孩现在新校区" },
+    { source: "P03", target: "S02", label: "带孩子去时光公园" },
+    { source: "P03", target: "E09", label: "因小学搬迁客源减少" },
+    { source: "P04", target: "S03", label: "在商业街经营" },
+    { source: "P04", target: "S04", label: "关注小学老校区" },
+    { source: "P04", target: "S05", label: "关注小学新校区" },
+    { source: "P04", target: "S01", label: "因码头停运受影响" },
+    { source: "P04", target: "E06", label: "因水巴停运受影响" },
+    { source: "P05", target: "S06", label: "居住在深井古村" },
+    { source: "P05", target: "S07", label: "可参观祠堂" },
+    { source: "P05", target: "S08", label: "参与书院活动" },
+    { source: "P07", target: "S02", label: "带孩子去时光公园" },
+    { source: "P07", target: "S05", label: "小孩在深井小学" },
+    { source: "P08", target: "S05", label: "在新校区工作" },
+    { source: "P08", target: "S04", label: "管理旧校区" },
+    { source: "P08", target: "E09", label: "经历小学搬迁" },
+    { source: "P09", target: "S03", label: "在商业街经营" },
+    { source: "P10", target: "S10", label: "放学后在深井公园打羽毛球" },
+    { source: "P10", target: "S02", label: "在时光公园打羽毛球" },
+    { source: "P10", target: "S10", label: "在深井公园玩滑滑梯" },
+    { source: "P10", target: "S14", label: "幼儿园也有滑滑梯" },
+    { source: "S01", target: "E06", label: "发生水巴停运" },
+    { source: "S01", target: "E07", label: "发生S10停运" },
+    { source: "S04", target: "S05", label: "三年前搬迁至" },
+    { source: "S04", target: "E09", label: "发生搬迁事件" },
+    { source: "S05", target: "E09", label: "搬迁目标地" },
+    { source: "S14", target: "S07", label: "原为姓黄的宗祠" },
+    { source: "E08", target: "E06", label: "地铁开通导致" },
+    { source: "E06", target: "S03", label: "影响商业街客流" },
+    { source: "E09", target: "P03", label: "影响小吃店客源" },
+    { source: "S01", target: "I01", label: "为水巴提供码头" },
+    { source: "P02", target: "I01", label: "依赖水巴客流" },
+    { source: "I01", target: "E06", label: "停运对象" },
+    { source: "I02", target: "E07", label: "替代水巴航线" },
+    { source: "I03", target: "E08", label: "对应地铁线路" },
+    { source: "P05", target: "A01", label: "日常散步" },
+    { source: "A01", target: "S01", label: "散步地点" },
+    { source: "P10", target: "A02", label: "放学后参与" },
+    { source: "A02", target: "S10", label: "活动于深井公园" },
+    { source: "A02", target: "S02", label: "活动于时光公园" },
+    { source: "O01", target: "S01", label: "位于深井码头" },
+    { source: "C01", target: "S07", label: "宗族祠堂归属" },
+    { source: "C02", target: "S14", label: "幼儿园家长群体" },
+    { source: "C02", target: "S05", label: "小学家长群体" },
+    // 情绪节点：单独成点，并连接到现有节点
+    { source: "P05", target: "EM01", label: "感到", predicateType: "情绪" },
+    { source: "P05", target: "EM06", label: "感到", predicateType: "情绪" },
+    { source: "P02", target: "EM04", label: "感到", predicateType: "情绪" },
+    { source: "P03", target: "EM02", label: "感到", predicateType: "情绪" },
+    { source: "C02", target: "EM04", label: "感到", predicateType: "情绪" },
+    { source: "P10", target: "EM07", label: "感到", predicateType: "情绪" },
+    { source: "P07", target: "EM05", label: "感到", predicateType: "情绪" },
+    { source: "P08", target: "EM03", label: "感到", predicateType: "情绪" },
+    { source: "P04", target: "EM08", label: "感到", predicateType: "情绪" },
+    // 可选：情绪指向空间/事件（让情绪点“落地”）
+    { source: "EM01", target: "S06", label: "指向", predicateType: "情绪" },
+    { source: "EM06", target: "S06", label: "指向", predicateType: "情绪" },
+    { source: "EM04", target: "E06", label: "因", predicateType: "情绪" },
+    { source: "EM02", target: "E09", label: "因", predicateType: "情绪" },
+    { source: "EM03", target: "E09", label: "因", predicateType: "情绪" },
+    { source: "EM05", target: "S05", label: "指向", predicateType: "情绪" },
+    { source: "EM07", target: "S10", label: "指向", predicateType: "情绪" },
+    { source: "EM08", target: "S08", label: "指向", predicateType: "情绪" }
+  ]
+};
+
+/* ========= 主程序逻辑 ========= */
+document.addEventListener('DOMContentLoaded', async () => {
+  window.dbManager = new DatabaseManager();
+
+  // 1. 背景已交给网页整体风格控制，不再加载地图底图。
+
+  // 2. 封面交互
+  const landing = document.getElementById('landing-page');
+  const title = document.getElementById('memory-realm-title');
+  title.addEventListener('click', () => {
+    landing.classList.add('hidden');
+    document.getElementById('knowledge-graph-page').classList.add('visible');
+  });
+
+  // 3. 加载数据
+  let graphData = await dbManager.loadData();
+  if (!graphData || graphData.nodes.length === 0) {
+    graphData = JSON.parse(JSON.stringify(defaultGraph)); // 深拷贝
+    await dbManager.saveData(graphData);
+  }
+  graphData = normalizeGraphTriples(graphData);
+  // 清理：删除指定节点及其相关连线（兼容旧缓存数据）
+  const removedNodeIds = new Set(['S11', 'S17', 'P06']);
+  graphData.nodes = graphData.nodes.filter(n => !removedNodeIds.has(n.id));
+  graphData.links = graphData.links.filter(l => {
+    const s = typeof l.source === 'object' ? l.source.id : l.source;
+    const t = typeof l.target === 'object' ? l.target.id : l.target;
+    return !removedNodeIds.has(s) && !removedNodeIds.has(t);
+  });
+  graphData = ensureEmotionLayer(graphData);
+  graphData = ensureCoreNodes(graphData);
+  // 将 images/ 下默认配图合并到空间节点（保留 IndexedDB 中用户上传的 data: 图片）
+  {
+    const defaultById = new Map(defaultGraph.nodes.map(n => [n.id, n]));
+    graphData.nodes.forEach(n => {
+      if (n.type !== 'Space') return;
+      const tpl = defaultById.get(n.id);
+      if (!tpl || !tpl.image) return;
+      if (!n.image || (typeof n.image === 'string' && !n.image.startsWith('data:'))) {
+        n.image = tpl.image;
+      }
+    });
+  }
+  // 将 defaultGraph 中的空间 geo 同步到当前数据（兼容旧缓存没有 geo 的情况）
+  {
+    const defaultById = new Map(defaultGraph.nodes.map(n => [n.id, n]));
+    graphData.nodes.forEach(n => {
+      if (n.type !== 'Space') return;
+      const tpl = defaultById.get(n.id);
+      if (!tpl || !tpl.geo) return;
+      if (!n.geo || !Number.isFinite(n.geo.lng) || !Number.isFinite(n.geo.lat)) {
+        n.geo = { lng: tpl.geo.lng, lat: tpl.geo.lat };
+      }
+    });
+  }
+  // 兜底：去除引用不存在节点的连线，防止 D3 forceLink 报错
+  {
+    const nodeIdSet = new Set(graphData.nodes.map(n => n.id));
+    graphData.links = graphData.links.filter(l => {
+      const s = typeof l.source === 'object' ? l.source.id : l.source;
+      const t = typeof l.target === 'object' ? l.target.id : l.target;
+      return nodeIdSet.has(s) && nodeIdSet.has(t);
+    });
+  }
+  // 补链：确保“鼎新书院”(S08) 与 “安来市原住民”(P05) 连上（兼容旧缓存数据）
+  const hasLink = graphData.links.some(l => {
+    const s = typeof l.source === 'object' ? l.source.id : l.source;
+    const t = typeof l.target === 'object' ? l.target.id : l.target;
+    return (s === 'P05' && t === 'S08') || (s === 'S08' && t === 'P05');
+  });
+  if (hasLink === false) {
+    graphData.links.push({
+      source: 'P05',
+      target: 'S08',
+      label: '参与书院活动',
+      predicateType: '活动',
+      confidence: 0.7
+    });
+  }
+  window.graph = graphData;
+
+  // 4. 初始化图谱
+  initGraph(graphData);
+  
+  // 5. 初始化图片管理面板事件
+  initPanelEvents();
+  
+  // 6. 初始化搜索功能
+  initSearch();
+});
+
+/* ========= D3 图谱渲染 ========= */
+function initGraph(data) {
+  const svg = d3.select("svg");
+  const container = d3.select("#graph-container");
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const geoNodes = getSpaceGeoNodes(data.nodes);
+  const geoBounds = getGeoBounds(geoNodes);
+  const hasGeoProjection = CONFIG.spatialProjection.enabled && !!geoBounds;
+
+  if (hasGeoProjection) {
+    geoNodes.forEach(n => {
+      const p = projectByGeo(n.geo.lng, n.geo.lat, geoBounds, width, height, CONFIG.spatialProjection.padding);
+      n.x = p.x;
+      n.y = p.y;
+      n.fx = p.x;
+      n.fy = p.y;
+    });
+  }
+
+  // --- 1. 缩放功能 (Zoom) ---
+  const zoom = d3.zoom()
+    // 禁用鼠标滚轮/双击缩放（仍保留拖拽平移；如需可继续关闭所有缩放/平移）
+    .filter((event) => event.type !== 'wheel' && event.type !== 'dblclick')
+    .scaleExtent([0.1, 4]) // 缩放范围
+    .on("zoom", (event) => {
+      container.attr("transform", event.transform);
+    });
+  svg.call(zoom);
+
+  // --- 1.1 自适应屏幕：确保全图完整落在一屏 ---
+  function fitGraphToScreen({ padding = 60, duration = 800 } = {}) {
+    const nodes = data.nodes || [];
+    if (nodes.length === 0) return;
+    if (nodes.some(n => Number.isFinite(n.x) === false || Number.isFinite(n.y) === false)) return;
+
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const n of nodes) {
+      if (n.x < minX) minX = n.x;
+      if (n.x > maxX) maxX = n.x;
+      if (n.y < minY) minY = n.y;
+      if (n.y > maxY) maxY = n.y;
+    }
+
+    const dx = Math.max(1, maxX - minX);
+    const dy = Math.max(1, maxY - minY);
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+
+    const scale = Math.min(
+      1,
+      Math.max(0.1, Math.min((width - padding * 2) / dx, (height - padding * 2) / dy))
+    );
+    const x = width / 2 - scale * cx;
+    const y = height / 2 - scale * cy;
+    const transform = d3.zoomIdentity.translate(x, y).scale(scale);
+
+    svg.transition().duration(duration).call(zoom.transform, transform);
+  }
+
+  if (hasGeoProjection && CONFIG.mapUnderlay.enabled) {
+    const mapPadding = CONFIG.spatialProjection.padding;
+    const leftTop = projectByGeo(geoBounds.minLng, geoBounds.maxLat, geoBounds, width, height, mapPadding);
+    const rightBottom = projectByGeo(geoBounds.maxLng, geoBounds.minLat, geoBounds, width, height, mapPadding);
+    container.append("image")
+      .attr("class", "geo-underlay-image")
+      .attr("x", leftTop.x)
+      .attr("y", leftTop.y)
+      .attr("width", Math.max(1, rightBottom.x - leftTop.x))
+      .attr("height", Math.max(1, rightBottom.y - leftTop.y))
+      .attr("href", buildStaticMapUrl(geoBounds))
+      .attr("preserveAspectRatio", "none")
+      .style("opacity", CONFIG.mapUnderlay.opacity)
+      .style("pointer-events", "none");
+  }
+
+  // --- 2. 力导向模拟 ---
+  const simulation = d3.forceSimulation(data.nodes)
+    .force("link", d3.forceLink(data.links).id(d => d.id).distance(185))
+    .force("charge", d3.forceManyBody().strength(-850))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("collide", d3.forceCollide().radius(d => {
+      if (d.type === 'Space') return 95;
+      const label = (d.label || '').toString();
+      // 根据文字长度给一点额外“占位”，减少黄字重叠
+      return Math.min(85, 22 + label.length * 6);
+    }));
+
+  if (hasGeoProjection) {
+    simulation
+      .force("space-anchor-x", d3.forceX(d => {
+        if (d.type === 'Space' && Number.isFinite(d.fx)) return d.fx;
+        return width / 2;
+      }).strength(d => d.type === 'Space' ? 1 : 0.05))
+      .force("space-anchor-y", d3.forceY(d => {
+        if (d.type === 'Space' && Number.isFinite(d.fy)) return d.fy;
+        return height / 2;
+      }).strength(d => d.type === 'Space' ? 1 : 0.05));
+  }
+
+  // --- 3. 绘制元素 ---
+  
+  // 连线
+  const link = container.append("g")
+    .attr("class", "links")
+    .selectAll("line")
+    .data(data.links)
+    .enter().append("line")
+    .attr("class", "link");
+
+  // 连线标签
+  const linkLabel = container.append("g")
+    .attr("class", "link-labels")
+    .selectAll("text")
+    .data(data.links)
+    .enter().append("text")
+    .attr("class", "link-label")
+    .attr("text-anchor", "middle")
+    .text(d => d.label);
+
+  // 节点组
+  const node = container.append("g")
+    .attr("class", "nodes")
+    .selectAll("g")
+    .data(data.nodes)
+    .enter().append("g")
+    .attr("class", "node")
+    .attr("data-type", d => d.type)
+    .attr("id", d => "node-" + d.id) // 方便搜索定位
+    .call(d3.drag()
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended));
+
+  // --- 4. 节点内容绘制 ---
+  node.each(function(d) {
+    const el = d3.select(this);
+    
+    if (d.type === 'Space') {
+      // 空间节点：命令行窗口
+      const g = el.append("g");
+      
+      // 阴影/光晕
+      g.append("rect")
+        .attr("x", -60).attr("y", -50)
+        .attr("width", 120).attr("height", 100)
+        .attr("fill", "none")
+        .attr("stroke", "none");
+
+      // 主体
+      g.append("rect")
+        .attr("class", "space-card")
+        .attr("x", -60).attr("y", -50)
+        .attr("width", 120).attr("height", 100);
+        
+      // 标题栏
+      g.append("rect")
+        .attr("class", "terminal-title-bar")
+        .attr("x", -60).attr("y", -50)
+        .attr("width", 120).attr("height", 12);
+        
+      g.append("text")
+        .attr("class", "terminal-title-text")
+        .text("sys://mem_loc")
+        .attr("x", -55).attr("y", -42).attr("font-size", 7);
+
+      // 内容区 (图片)
+      if (d.image) {
+        g.append("image")
+          .attr("x", -58).attr("y", -36)
+          .attr("width", 116).attr("height", 68)
+          .attr("href", d.image)
+          .attr("preserveAspectRatio", "xMidYMid slice")
+          .style("opacity", 0.9);
+      } else {
+         // 无图时的命令行文字
+         g.append("text").attr("class", "terminal-prompt").text(">_ NO_DATA").attr("x", -55).attr("y", -20).attr("font-size", 8);
+      }
+
+      // 底部标签
+      g.append("rect")
+        .attr("fill", "rgba(94,47,35,0.9)").attr("stroke", "rgba(239,139,94,0.72)").attr("stroke-width", 1)
+        .attr("x", -60).attr("y", 32)
+        .attr("width", 120).attr("height", 18);
+        
+      g.append("text")
+        .attr("class", "space-node-label")
+        .text(d.label)
+        .attr("x", 0).attr("y", 44)
+        .attr("text-anchor", "middle").attr("font-size", 9);
+
+    } else {
+      // 人物/事件节点：圆形
+      el.append("circle")
+        .attr("r", d.type === 'Person' ? 12 : 10)
+        .attr("fill", d => CONFIG.colors[d.type] || CONFIG.colors.Default);
+        
+      el.append("text")
+        .text(d.label)
+        .attr("dy", 25)
+        .attr("text-anchor", "middle");
+    }
+  });
+
+  // --- 5. 交互事件 ---
+
+  // 高亮相邻节点 (Highlight Neighbors)
+  // 构建邻接矩阵
+  const linkedByIndex = {};
+  data.links.forEach(d => {
+    linkedByIndex[`${d.source.id},${d.target.id}`] = 1;
+    linkedByIndex[`${d.target.id},${d.source.id}`] = 1; // 无向图
+  });
+
+  function isConnected(a, b) {
+    return linkedByIndex[`${a.id},${b.id}`] || a.id === b.id;
+  }
+
+  node.on("mouseover", function(event, d) {
+    // 自身和邻居保持高亮，其他淡化
+    node.classed("faded", o => !isConnected(d, o));
+    link.classed("faded", o => o.source.id !== d.id && o.target.id !== d.id);
+    linkLabel.classed("faded", o => o.source.id !== d.id && o.target.id !== d.id);
+  })
+  .on("mouseout", function() {
+    // 恢复原状
+    node.classed("faded", false);
+    link.classed("faded", false);
+    linkLabel.classed("faded", false);
+  });
+
+  // --- 6. 实时更新 ---
+  simulation.on("tick", () => {
+    link
+      .attr("x1", d => d.source.x)
+      .attr("y1", d => d.source.y)
+      .attr("x2", d => d.target.x)
+      .attr("y2", d => d.target.y);
+
+    linkLabel
+      .attr("x", d => (d.source.x + d.target.x) / 2)
+      .attr("y", d => (d.source.y + d.target.y) / 2);
+
+    node
+      .attr("transform", d => `translate(${d.x},${d.y})`);
+  });
+
+  // 初次稳定后自动适配（并提供兜底定时，避免一直等不到 end）
+  let fittedOnce = false;
+  simulation.on("end", () => {
+    if (fittedOnce) return;
+    fittedOnce = true;
+    fitGraphToScreen();
+  });
+  setTimeout(() => {
+    if (fittedOnce) return;
+    fittedOnce = true;
+    fitGraphToScreen();
+  }, 1400);
+  // 二次兜底：部分设备初期布局抖动时再做一次无动画适配
+  setTimeout(() => fitGraphToScreen({ duration: 0 }), 3200);
+
+  // 窗口尺寸变化时重新适配
+  let fitTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(() => fitGraphToScreen({ duration: 0 }), 200);
+  }, { passive: true });
+
+  // 拖拽函数
+  function dragstarted(event, d) {
+    if (!event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+    d3.select(this).style("cursor", "grabbing");
+  }
+  function dragged(event, d) {
+    d.fx = event.x;
+    d.fy = event.y;
+  }
+  function dragended(event, d) {
+    if (!event.active) simulation.alphaTarget(0);
+    if (!(hasGeoProjection && d.type === 'Space' && d.geo)) {
+      d.fx = null;
+      d.fy = null;
+    }
+    d3.select(this).style("cursor", "pointer");
+  }
+  
+  // 把zoom暴露给全局，方便搜索功能调用
+  window.graphZoom = zoom;
+  window.graphSvg = svg;
+}
+
+/* ========= 搜索与定位功能 ========= */
+function initSearch() {
+  const input = document.getElementById('searchNode');
+  const datalist = document.getElementById('nodeList');
+  
+  // 填充选项
+  window.graph.nodes.forEach(n => {
+    const option = document.createElement('option');
+    option.value = n.label;
+    datalist.appendChild(option);
+  });
+
+  input.addEventListener('change', () => {
+    const val = input.value;
+    const targetNode = window.graph.nodes.find(n => n.label === val);
+    
+    if (targetNode) {
+      // 找到节点，计算变换
+      const scale = 2; // 放大倍数
+      const x = -targetNode.x * scale + window.innerWidth / 2;
+      const y = -targetNode.y * scale + window.innerHeight / 2;
+      
+      const transform = d3.zoomIdentity.translate(x, y).scale(scale);
+      
+      // 平滑过渡
+      window.graphSvg.transition()
+        .duration(1500)
+        .call(window.graphZoom.transform, transform);
+        
+      // 短暂高亮该节点
+      const el = d3.select("#node-" + targetNode.id);
+      el.selectAll("circle, rect").style("stroke", "#f4cfb8").style("stroke-width", "5px");
+      setTimeout(() => {
+        el.selectAll("circle, rect").style("stroke", null).style("stroke-width", null);
+      }, 2000);
+      
+      input.value = ''; // 清空
+      input.blur();
+    }
+  });
+}
+
+/* ========= 图片上传面板逻辑 ========= */
+function initPanelEvents() {
+  const nodeSelect = document.getElementById('nodeSelect');
+  // 填充下拉框
+  window.graph.nodes.filter(n => n.type === 'Space').forEach(n => {
+    const opt = document.createElement('option');
+    opt.value = n.id;
+    opt.text = n.label;
+    nodeSelect.add(opt);
+  });
+  
+  // 预览
+  document.getElementById('imageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => document.getElementById('imagePreview').innerHTML = `<img src="${e.target.result}" style="max-width:100%">`;
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
+window.toggleUploadPanel = function() {
+  const p = document.getElementById('uploadPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+window.uploadImage = async function() {
+  const nodeId = document.getElementById('nodeSelect').value;
+  const file = document.getElementById('imageInput').files[0];
+  if (!nodeId || !file) return alert('请选择节点和图片');
+  
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const base64 = e.target.result;
+    await window.dbManager.saveImage(nodeId, base64);
+    // 更新内存中的数据
+    const node = window.graph.nodes.find(n => n.id === nodeId);
+    if(node) node.image = base64;
+    alert('上传成功，刷新页面生效');
+    location.reload();
+  };
+  reader.readAsDataURL(file);
+}
+
+window.clearImage = async function() {
+  const nodeId = document.getElementById('nodeSelect').value;
+  if (!nodeId) return;
+  if (confirm('确定清除图片？')) {
+    await window.dbManager.deleteImage(nodeId);
+    location.reload();
+  }
+}
+
+window.exportGraph = async function() {
+  // 导出三元组化后的完整图谱（nodes + links），便于论文与复用
+  const graph = normalizeGraphTriples(window.graph || { nodes: [], links: [] });
+  const blob = new Blob([JSON.stringify(graph, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'knowledge_graph_triples.json';
+  a.click();
+}
+
+window.importGraph = function() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const graph = normalizeGraphTriples(JSON.parse(evt.target.result));
+        if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.links)) {
+          return alert('导入失败：JSON 结构不正确（需要 nodes/links）');
+        }
+        await window.dbManager.saveData(graph);
+        alert('图谱导入完成，刷新页面生效');
+        location.reload();
+      } catch (err) {
+        console.error(err);
+        alert('导入失败：JSON 解析错误');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+window.exportImages = async function() {
+  const images = await window.dbManager._getAll('images');
+  const blob = new Blob([JSON.stringify(images)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'memory_realm_backup.json';
+  a.click();
+}
+
+window.importImages = function() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const data = JSON.parse(evt.target.result);
+      for (let item of data) {
+        await window.dbManager.saveImage(item.nodeId, item.data);
+      }
+      alert('导入完成');
+      location.reload();
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+</script>
+</body>
+</html>
