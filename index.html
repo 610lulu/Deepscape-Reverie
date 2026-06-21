@@ -98,43 +98,6 @@ footer{padding:58px 0;border-top:1px solid var(--soft);color:#9c8175;text-align:
 
 
 
-<section id="sceneWalk" class="walk-section">
-  <div class="walk-world">
-    <div class="walk-plane" id="walkPlane">
-      <img src="assets/scene-walk-01.jpg" alt="红色楼梯、玻璃光廊与树影组成的梦境空间场景">
-      <button class="walk-hotspot active" type="button" style="--left:47%;--top:63%" onclick="updateWalk(0)"><span>入口</span></button>
-      <button class="walk-hotspot" type="button" style="--left:55%;--top:55%" onclick="updateWalk(1)"><span>台阶</span></button>
-      <button class="walk-hotspot" type="button" style="--left:70%;--top:32%" onclick="updateWalk(2)"><span>树影</span></button>
-      <button class="walk-hotspot" type="button" style="--left:39%;--top:31%" onclick="updateWalk(3)"><span>柱列</span></button>
-    </div>
-  </div>
-  <div class="walk-hud">
-    <div class="walk-title">
-      <div class="wake-kicker">Chapter 05 · Walkable Dream Scene</div>
-      <h2>学校廊道</h2>
-      <p>梦把空间放大成一条可以走的路：楼梯、柱列、玻璃和树影都在等你靠近。</p>
-    </div>
-    <div class="walk-dialogue">
-      <div class="walk-dialogue-head"><span id="walkMeta">Scene Walk 01 · Threshold</span><span id="walkProgress">01 / 04</span></div>
-      <h3 id="walkTitle">入口处</h3>
-      <p id="walkText">你在红色地面上醒来。栏板把路径推向深处，远处的人影像刚从梦里经过。</p>
-      <div class="walk-controls">
-        <div class="walk-dots" aria-label="空间视点选择">
-          <button class="walk-dot active" type="button" onclick="updateWalk(0)" aria-label="入口处"></button>
-          <button class="walk-dot" type="button" onclick="updateWalk(1)" aria-label="向上走"></button>
-          <button class="walk-dot" type="button" onclick="updateWalk(2)" aria-label="看向树影"></button>
-          <button class="walk-dot" type="button" onclick="updateWalk(3)" aria-label="停在柱列"></button>
-        </div>
-        <div class="walk-buttons">
-          <button class="btn" type="button" onclick="stepWalk(-1)">后退</button>
-          <button class="btn primary" type="button" onclick="stepWalk(1)">向前走</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="walk-note">Single Image Walkthrough · Scene-Walk-01</div>
-</section>
-
 <section id="chapter01Explain" class="chapter-gate chapter-story"><div><div class="story-kicker">Memory Fragmentation · Explanation</div><p class="story-text" id="chapter01ExplainStory" data-fulltext="梦里的深井村不是现实的复刻，而是记忆被情绪重新渲染后的场景。空间节点以片段的方式散落：巷道、码头、书院、榕树、学校与商业街，分别承载着经过、等待、停留、上学、重逢与失落。它们之所以分散，是因为记忆并不按照地图储存，而是依附于事件、情绪与场所反复被唤醒。"></p><div class="dream-actions" style="justify-content:center"><a class="btn primary" href="#projectSpark" onclick="scrollToSection('projectSpark');return false">我的脑洞</a></div></div></section>
 
 <section id="projectSpark" class="chapter-gate"><div><div class="eyebrow">Chapter 02 · Into the Museum</div><h2>如果有一个博物馆</h2><p>可以让人们在进入的时候，记忆开始被激发。</p><div class="dream-actions" style="justify-content:center"><a class="btn primary" href="#projectIntro" onclick="scrollToSection('projectIntro');return false">收集资料</a></div></div></section>
@@ -181,6 +144,43 @@ footer{padding:58px 0;border-top:1px solid var(--soft);color:#9c8175;text-align:
       </div>
     </div>
   </div>
+</section>
+
+<section id="sceneWalk" class="walk-section">
+  <div class="walk-world">
+    <div class="walk-plane" id="walkPlane">
+      <img src="assets/scene-walk-01.jpg" alt="红色楼梯、玻璃光廊与树影组成的梦境空间场景">
+      <button class="walk-hotspot active" type="button" style="--left:47%;--top:63%" onclick="updateWalk(0)"><span>入口</span></button>
+      <button class="walk-hotspot" type="button" style="--left:55%;--top:55%" onclick="updateWalk(1)"><span>台阶</span></button>
+      <button class="walk-hotspot" type="button" style="--left:70%;--top:32%" onclick="updateWalk(2)"><span>树影</span></button>
+      <button class="walk-hotspot" type="button" style="--left:39%;--top:31%" onclick="updateWalk(3)"><span>柱列</span></button>
+    </div>
+  </div>
+  <div class="walk-hud">
+    <div class="walk-title">
+      <div class="wake-kicker">Chapter 05 · Walkable Dream Scene</div>
+      <h2>学校廊道</h2>
+      <p>梦把空间放大成一条可以走的路：楼梯、柱列、玻璃和树影都在等你靠近。</p>
+    </div>
+    <div class="walk-dialogue">
+      <div class="walk-dialogue-head"><span id="walkMeta">Scene Walk 01 · Threshold</span><span id="walkProgress">01 / 04</span></div>
+      <h3 id="walkTitle">入口处</h3>
+      <p id="walkText">你在红色地面上醒来。栏板把路径推向深处，远处的人影像刚从梦里经过。</p>
+      <div class="walk-controls">
+        <div class="walk-dots" aria-label="空间视点选择">
+          <button class="walk-dot active" type="button" onclick="updateWalk(0)" aria-label="入口处"></button>
+          <button class="walk-dot" type="button" onclick="updateWalk(1)" aria-label="向上走"></button>
+          <button class="walk-dot" type="button" onclick="updateWalk(2)" aria-label="看向树影"></button>
+          <button class="walk-dot" type="button" onclick="updateWalk(3)" aria-label="停在柱列"></button>
+        </div>
+        <div class="walk-buttons">
+          <button class="btn" type="button" onclick="stepWalk(-1)">后退</button>
+          <button class="btn primary" type="button" onclick="stepWalk(1)">向前走</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="walk-note">Single Image Walkthrough · Scene-Walk-01</div>
 </section>
 
 </main>
@@ -259,7 +259,7 @@ document.addEventListener('keydown',event=>{const modal=document.getElementById(
 function collectRandomMemory(){const rest=dreamMemoryIndexes.filter(i=>!found.has(i));const pool=rest.length?rest:dreamMemoryIndexes;openMemory(pool[Math.floor(Math.random()*pool.length)])}
 function scrollToSection(id){const target=document.getElementById(id);if(!target)return;const header=document.querySelector('header');const offset=header?header.offsetHeight:0;const top=target.getBoundingClientRect().top+window.pageYOffset-offset;window.scrollTo({top,behavior:'smooth'});if(id==='interviewArchive')setTimeout(resetInterviewScroll,260);history.replaceState(null,'','#'+id)}
 function resetInterviewScroll(){const track=document.querySelector('.interview-track');if(!track)return;track.style.animation='none';void track.offsetHeight;track.style.animation=''}
-function goNextChapter(){if(dreamMemoryIndexes.filter(index=>found.has(index)).length<requiredCount)return;scrollToSection('sceneWalk')}
+function goNextChapter(){if(dreamMemoryIndexes.filter(index=>found.has(index)).length<requiredCount)return;scrollToSection('chapter01Explain')}
 function updateEvidenceState(activeIndex=0){const count=evidenceFound.size;const countEl=document.getElementById('evidenceCount');if(countEl)countEl.textContent=`Evidence ${count} / ${evidenceItems.length}`;[1,2,3,4,5,6].forEach(i=>document.getElementById(`taskSlot${i}`)?.classList.toggle('active',i<=count));document.querySelectorAll('.artifact').forEach((button,index)=>{button.classList.toggle('active',index===activeIndex);button.classList.toggle('collected',evidenceFound.has(index))});const nextBtn=document.getElementById('caseNextBtn');if(nextBtn&&count>=evidenceItems.length){nextBtn.classList.remove('locked');nextBtn.textContent='进入空间漫游'}}
 function openEvidence(index,skipScroll=false){const item=evidenceItems[index];if(!item)return;evidenceFound.add(index);document.getElementById('caseNo').textContent=item.no;document.getElementById('caseTitle').textContent=item.object;document.getElementById('clueMeta').textContent=item.meta;document.getElementById('clueText').textContent=item.quote;document.getElementById('cluePlace').textContent=item.place;document.getElementById('cluePrototype').textContent=`空间原型：${item.prototype}`;document.getElementById('clueHint').textContent='这张字条先作为谜面保存。把六件物件都读完后，直接进入空间漫游查看视觉转译结果。';updateEvidenceState(index);if(!skipScroll)setTimeout(()=>scrollToSection('evidenceText'),80)}
 function goAfterEvidence(){if(evidenceFound.size<evidenceItems.length)return;scrollToSection('sceneWalk')}
