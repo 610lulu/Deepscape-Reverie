@@ -2,6 +2,10 @@
 
 深景迴梦（Deepscape Reverie）静态网页项目，包含主站页面与访谈知识图谱子页面。
 
+## Live Site
+
+https://deepscape-reverie-dra5y4702-lulu610-s-projects.vercel.app
+
 ## 目录结构
 
 ```text
