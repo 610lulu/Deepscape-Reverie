@@ -2,23 +2,6 @@
 
 深景迴梦（Deepscape Reverie）静态网页项目，包含主站页面与访谈知识图谱子页面。
 
-## Quick Start
-
-这是纯静态站点，可直接本地打开：
-
-- `index.html`
-
-建议用本地静态服务器预览（避免某些浏览器对 `file://` 的限制）：
-
-```bash
-cd Deepscape_Reverie_Web_release
-python3 -m http.server 8080
-```
-
-然后访问：
-
-- `http://localhost:8080/index.html`
-
 ## 目录结构
 
 ```text
