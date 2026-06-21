@@ -20,12 +20,6 @@ Deepscape_Reverie_Web_release/
 └─ .gitignore
 ```
 
-## GitHub 上传建议
-
-- 推荐直接上传此目录全部内容。
-- 当前版本已移除大量过程性资料（采访音频、原始文档等），保留运行必需文件。
-- 若后续新增大体积视频，建议使用 Git LFS。
-
 ## Notes
 
 - 图谱页面由 `index.html` 通过 iframe 引用：`知识图谱/20260130知识图谱.html`。
