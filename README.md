@@ -4,7 +4,7 @@
 
 ## Live Site
 
-https://deepscape-reverie-dra5y4702-lulu610-s-projects.vercel.app
+https://610lulu.github.io/Deepscape-Reverie/
 
 ## 目录结构
 

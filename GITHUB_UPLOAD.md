@@ -34,5 +34,6 @@ git push -u origin main
 
 3. 如果 GitHub Pages 部署：
    - 进入仓库 `Settings -> Pages`
-   - Source 选 `Deploy from a branch`
-   - Branch 选 `main / root`
+   - Source 选 `GitHub Actions`
+   - 推送到 `main` 后，`.github/workflows/pages.yml` 会自动发布根目录网页
+   - 入口地址为 `https://610lulu.github.io/Deepscape-Reverie/`
