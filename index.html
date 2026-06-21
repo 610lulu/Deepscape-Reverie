@@ -83,7 +83,7 @@ footer{padding:58px 0;border-top:1px solid var(--soft);color:#9c8175;text-align:
 </head>
 <body>
 <div class="intro-screen" id="introScreen" aria-hidden="true"><div class="intro-text" id="introText"></div></div>
-<header><div class="wrap nav"><a href="#dream" class="brand"><b>Deepscape Reverie</b><span>深景迴梦</span></a><nav class="links"><a href="#dream">Dream</a><a href="#sceneWalk">Scene</a><a href="#sceneWalk">Walk</a><a href="#knowledgeGraph">Graph</a></nav></div></header>
+<header><div class="wrap nav"><a href="#dream" class="brand"><b>Deepscape Reverie</b><span>深景迴梦</span></a><nav class="links"><a href="#dream">Dream</a><a href="#knowledgeGraph">Graph</a></nav></div></header>
 <main>
 <section id="dream" class="dream"><div class="dream-layout"><div class="dream-copy"><div class="eyebrow">Memory Journey · Shenjing Village</div><h1>Deepscape Reverie</h1><div class="dream-cn">深景迴梦</div><p class="dream-text" id="dreamStory" data-fulltext="2026年6月，我做了一个梦。梦里，我沿着一条熟悉的光路回到深井村：码头还在等待，书院低声回响，榕树下的人影不断重叠，学校的走廊被红色光线拉长。请选择一个空间节点，靠近一段被保存下来的记忆。"></p><div class="memory-counter"><span>已收集记忆</span><div class="dots"><i class="dot" id="dot1"></i><i class="dot" id="dot2"></i><i class="dot" id="dot3"></i><i class="dot" id="dot4"></i><i class="dot" id="dot5"></i></div><span id="countText">0 / 5</span></div><div class="dream-actions"><button class="btn primary" onclick="collectRandomMemory()">随机靠近一段记忆</button><button id="gateBtn" class="btn locked" onclick="goNextChapter()">梦醒之后，进入下一章</button></div></div>
 <div class="village-stage" id="villageStage">
@@ -182,107 +182,9 @@ footer{padding:58px 0;border-top:1px solid var(--soft);color:#9c8175;text-align:
       </div>
     </div>
   </div>
-</section><section id="lineBoard" class="line-board-section">
-  <div class="line-board-shell">
-    <div class="line-board-toolbar">
-      <div class="line-board-counter" id="lineBoardCounter">01 / 03</div>
-      <div class="line-board-pills" aria-label="叙事线展板页码">
-        <button class="line-board-pill active" type="button" data-line-board-target="0">01</button>
-        <button class="line-board-pill" type="button" data-line-board-target="1">02</button>
-        <button class="line-board-pill" type="button" data-line-board-target="2">03</button>
-      </div>
-    </div>
-    <div class="line-board-stage" id="lineBoardStage" aria-label="知识图谱后的叙事梳理展板">
-      <article class="line-board-page active" data-line-board-page="0">
-        <div class="line-board-copy">
-          <div>
-            <div class="line-board-kicker">Graph Translation · Narrative Board</div>
-            <h2>从图谱里抽出三条线</h2>
-            <p>这一页承接前面的知识图谱，把空间节点、事件片段和情绪词重新整理成可继续叙事的线索。右侧先预留图文排版位，下一步可以把你的展板图片直接放进来。</p>
-            <div class="line-board-meta"><span class="line-board-tag">空间节点</span><span class="line-board-tag">日常事件</span><span class="line-board-tag">情绪回响</span><span class="line-board-tag">叙事路径</span></div>
-          </div>
-          <div class="line-board-note">建议放图：知识图谱局部、节点关系截图、或“从图谱到叙事线”的说明图。</div>
-        </div>
-        <div class="line-board-visual">
-          <div class="line-board-canvas">
-            <div class="line-board-image-slot" data-label="IMAGE SLOT 01"><small>这里放主图：图谱分析 / 叙事线总览 / 关系网络局部。</small></div>
-            <div class="line-board-card-grid">
-              <div class="line-board-card"><b>输入</b><span>访谈材料中的空间、事件、情绪被整理为知识图谱节点。</span></div>
-              <div class="line-board-card"><b>筛选</b><span>观察高频空间与高关联事件，寻找可被转译的叙事路径。</span></div>
-              <div class="line-board-card"><b>输出</b><span>形成消失线、折叠线、变速线三条叙事线。</span></div>
-            </div>
-          </div>
-          <div class="line-board-strip">
-            <div class="line-board-card"><b>Space</b><span>码头、商业街、学校、榕树公园</span></div>
-            <div class="line-board-card"><b>Event</b><span>等船、迁徙、上学、玩耍、停留</span></div>
-            <div class="line-board-card"><b>Emotion</b><span>怀旧、失落、熟悉、松弛、错位</span></div>
-          </div>
-        </div>
-      </article>
-      <article class="line-board-page" data-line-board-page="1">
-        <div class="line-board-copy">
-          <div>
-            <div class="line-board-kicker">Three Lines · Spatial Memory</div>
-            <h2>叙事线梳理</h2>
-            <p>把图谱里的关系压缩成三种时间感：消失线关注空间功能退场，折叠线关注教育记忆叠加，变速线关注日常速度被放慢。</p>
-            <div class="line-board-meta"><span class="line-board-tag">LINE A 消失线</span><span class="line-board-tag">LINE B 折叠线</span><span class="line-board-tag">LINE C 变速线</span></div>
-          </div>
-          <div class="line-board-note">建议放图：三条线的综合图、路径图、或你小册子里的叙事线页面。</div>
-        </div>
-        <div class="line-board-visual">
-          <div class="line-board-canvas">
-            <div class="line-board-image-slot" data-label="IMAGE SLOT 02"><small>这里放叙事线图版：消失线 / 折叠线 / 变速线。</small></div>
-            <div class="line-board-card-grid">
-              <div class="line-board-card"><b>消失线</b><span>码头与安来市商业街，指向水运衰落、商业退场与等待感。</span></div>
-              <div class="line-board-card"><b>折叠线</b><span>小学、书院、幼儿园，指向教育空间在不同时代的重叠。</span></div>
-              <div class="line-board-card"><b>变速线</b><span>古村与榕树公园，指向慢节奏、停留与公共日常。</span></div>
-            </div>
-          </div>
-          <div class="line-board-strip">
-            <div class="line-board-card"><b>过去</b><span>空间功能仍然活跃，记忆以事件进入图谱。</span></div>
-            <div class="line-board-card"><b>现在</b><span>功能转移或衰退，场所成为被回看的证据。</span></div>
-            <div class="line-board-card"><b>梦境</b><span>通过光、尺度和路径重新组织可漫游场景。</span></div>
-          </div>
-        </div>
-      </article>
-      <article class="line-board-page" data-line-board-page="2">
-        <div class="line-board-copy">
-          <div>
-            <div class="line-board-kicker">Light Prototype · Scene Translation</div>
-            <h2>进入空间原型</h2>
-            <p>三条叙事线继续转译为空间光线原型：入口、码头广场、学校廊道、教室、坡道与榕树公园。这里先保留 6 个图文卡位，后面可以替换成你的真实图片。</p>
-            <div class="line-board-meta"><span class="line-board-tag">光线类型</span><span class="line-board-tag">空间原型</span><span class="line-board-tag">梦核生成</span></div>
-          </div>
-          <div class="line-board-note">建议放图：空间原型提取页、光线分析页、或六个场景的生成结果。</div>
-        </div>
-        <div class="line-board-visual">
-          <div class="line-board-prototypes">
-            <div class="line-board-prototype"><b>A 旧日喧嚣</b><small>入口空间</small><span>单侧玻璃透光，回应商业街退场与观看。</span></div>
-            <div class="line-board-prototype"><b>B 等待船笛</b><small>码头广场</small><span>自然天光强化等待、开敞与空旷感。</span></div>
-            <div class="line-board-prototype"><b>C 童影穿廊</b><small>学校廊道</small><span>门洞重复，形成童年路径的节奏。</span></div>
-            <div class="line-board-prototype"><b>D 书声未远</b><small>教室室内</small><span>单侧窗光让时间以明暗层次显影。</span></div>
-            <div class="line-board-prototype"><b>E 坡间斜阳</b><small>室外坡道</small><span>自然光把身体速度从经过转为停留。</span></div>
-            <div class="line-board-prototype"><b>F 草间童趣</b><small>榕树公园</small><span>树影筛光回应公园与玩耍记忆。</span></div>
-          </div>
-          <div class="line-board-strip">
-            <div class="line-board-card"><b>下一步</b><span>替换图片后，这一页可直接作为图谱之后的转场展板。</span></div>
-            <div class="line-board-card"><b>交互</b><span>左右箭头翻页，悬停出现放大镜。</span></div>
-            <div class="line-board-card"><b>出口</b><span>第三页右箭头进入后续叙事流程。</span></div>
-          </div>
-        </div>
-      </article>
-      <div class="line-board-magnifier" id="lineBoardMagnifier" aria-hidden="true"><div class="line-board-magnifier-content" id="lineBoardMagnifierContent"></div></div>
-    </div>
-    <div class="line-board-controls">
-      <button class="line-board-arrow" id="lineBoardPrev" type="button" aria-label="上一页">‹</button>
-      <div class="line-board-caption">Narrative Line Board</div>
-      <button class="line-board-arrow" id="lineBoardNext" type="button" aria-label="下一页">›</button>
-    </div>
-  </div>
 </section>
 
-<section id="strategyFlow" class="flow-section"><div class="flow-shell strategy-only"><div class="strategy-cards"><article class="strategy-card"><h3>STEP 1</h3><h4>采访得到<br>空间记忆点</h4><small>Interviews to obtain spatial memory points</small><div class="strategy-illu illu-memory"></div><p>受访者叙述个人记忆片段</p></article><article class="strategy-card"><h3>STEP 2</h3><h4>通过知识图谱<br>构建空间联系</h4><small>Build spatial connections via knowledge graph</small><div class="strategy-illu illu-graph"></div><p>建立空间语义关系与关联强度</p></article><article class="strategy-card"><h3>STEP 3</h3><h4>提取空间<br>光线特征</h4><small>Extract spatial light features</small><div class="strategy-illu illu-light"></div><p>分析光线方向、强度与时间变化</p></article><article class="strategy-card"><h3>STEP 4</h3><h4>通过梦核风格化<br>转译记忆</h4><small>Translate memory through liminal aesthetic</small><div class="strategy-illu illu-dream"></div><p>重构记忆氛围，形成空间叙事</p></article></div></div></section>
-<section id="narrativeLines" class="narrative-section"><div class="narrative-shell"><div class="narrative-head"><h2>从图谱到叙事线</h2><p>把空间节点、事件片段、情绪回响串成三条路径：消失线、折叠线、变速线。点击线路，继续进入后续转译。</p></div><div class="line-switch"><button class="line-btn active" type="button" data-line="0">LINE A · 消失线</button><button class="line-btn" type="button" data-line="1">LINE B · 折叠线</button><button class="line-btn" type="button" data-line="2">LINE C · 变速线</button></div><div class="line-stage"><article class="line-visual"><img id="lineImage" src="assets/node-pier.jpg" alt="叙事线场景图"><div class="line-caption"><h3 id="lineTitle">消失线</h3><p id="lineDesc">从码头到安来市商业街，流动被突然截断，过去的喧闹变成等待与停滞。</p></div></article><article class="line-detail"><div class="line-tags" id="lineTags"></div><div class="line-quote" id="lineQuote"></div><div class="line-list" id="lineCards"></div><div class="dream-actions" style="margin-top:16px"><button class="btn primary" type="button" onclick="scrollToSection('translationLab')">进入空间转译</button></div></article></div></div></section><section id="translationLab" class="translate-section"><div class="translate-shell"><div class="narrative-head"><h2>空间原型转译</h2><p>从“采访片段与图谱关系”走向“可感知的空间视觉”：现场基底、梦核化生成、叙事场景结果三段并置展示。</p></div><div class="translate-grid"><article class="translate-card"><img src="assets/node-anlai-commercial-street.jpg" alt="现场基底"><h4>现场基底</h4><p>保留原始空间的结构、路径与材料感，作为叙事线的物理证据层。</p></article><article class="translate-card"><img src="assets/dreamcore-commercial.png" alt="梦核转译"><h4>梦核转译</h4><p>增强记忆偏移：压缩尺度、延长光路、模糊边界，让情绪成为主要可见物。</p></article><article class="translate-card"><img src="assets/scene-render-01.jpg" alt="叙事场景"><h4>叙事场景</h4><p>形成可漫游的视觉段落，供后续“童影穿廊 / 书声未远 / 落日嬉游”场景调用。</p></article></div><div class="dream-actions" style="justify-content:center;margin-top:20px"><button class="btn primary" type="button" onclick="scrollToSection('finalScenes')">查看最终场景</button></div></div></section><section id="finalScenes" class="ending-section"><div class="ending-shell"><div class="narrative-head"><h2>最终叙事场景</h2><p>三条叙事线最终汇聚成三个沉浸场景，分别对应童年路径、书院回声与黄昏公园。</p></div><div class="ending-grid"><article class="ending-card"><img src="assets/scene-render-01.jpg" alt="童影穿廊"><h3>童影穿廊</h3><p>折叠线场景：学校路径被拉长，脚步与课铃以回声的方式重叠。</p></article><article class="ending-card"><img src="assets/scene-render-02.jpg" alt="书声未远"><h3>书声未远</h3><p>折叠线与消失线交汇：书院与街巷同场，知识与日常同时闪现。</p></article><article class="ending-card"><img src="assets/scene-render-03.jpg" alt="落日嬉游"><h3>落日嬉游</h3><p>变速线场景：榕树与公园把时间放慢，让重逢成为可停留的空间动作。</p></article></div></div></section></main>
+</main>
 
 <div class="memory-modal" id="memoryModal" onclick="closeMemory(event)">
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle" onclick="event.stopPropagation()">
@@ -408,18 +310,7 @@ function setKnowledgeMode(mode){if(!knowledgeFrameShell)return;knowledgeMode=mod
 function updateKnowledgeMagnifier(event){if(knowledgeMode!=='magnify')return;if(!knowledgeFrameShell||!knowledgeMagnifier||!knowledgeMagnifierFrame)return;const rect=knowledgeFrameShell.getBoundingClientRect();const x=event.clientX-rect.left,y=event.clientY-rect.top;if(x<0||x>rect.width||y<0||y>rect.height){hideKnowledgeMagnifier();return}knowledgeMagnifier.classList.add('active');knowledgeMagnifier.style.left=x+'px';knowledgeMagnifier.style.top=y+'px';const tx=knowledgeMagSize/2-x*knowledgeMagZoom,ty=knowledgeMagSize/2-y*knowledgeMagZoom;knowledgeMagnifierFrame.style.transform='translate('+tx+'px,'+ty+'px) scale('+knowledgeMagZoom+')';knowledgeMagnifierFrame.style.width=rect.width+'px';knowledgeMagnifierFrame.style.height=rect.height+'px'                                                     }
 function initKnowledgeMagnifier(){if(!knowledgeFrameShell||!knowledgeMagnifier||!knowledgeMagnifierFrame)return;knowledgeRelationBtn?.addEventListener('click',()=>setKnowledgeMode('relation'));knowledgeMagnifyBtn?.addEventListener('click',()=>setKnowledgeMode('magnify'));setKnowledgeMode('relation');if(!window.matchMedia('(pointer:fine)').matches)return;knowledgeFrameShell.addEventListener('pointermove',updateKnowledgeMagnifier);knowledgeFrameShell.addEventListener('pointerenter',updateKnowledgeMagnifier);knowledgeFrameShell.addEventListener('pointerleave',hideKnowledgeMagnifier)}
 
-const lineBoardPages=[...document.querySelectorAll('.line-board-page')],lineBoardStage=document.getElementById('lineBoardStage'),lineBoardCounter=document.getElementById('lineBoardCounter'),lineBoardPrev=document.getElementById('lineBoardPrev'),lineBoardNext=document.getElementById('lineBoardNext'),lineBoardPills=[...document.querySelectorAll('.line-board-pill')],lineBoardMagnifier=document.getElementById('lineBoardMagnifier'),lineBoardMagnifierContent=document.getElementById('lineBoardMagnifierContent');
-const lineBoardMagSize=230,lineBoardMagZoom=1.95;
-let lineBoardIndex=0;
-function hideLineBoardMagnifier(){if(lineBoardMagnifier)lineBoardMagnifier.classList.remove('active')}
-function renderLineBoardMagnifierContent(){if(!lineBoardStage||!lineBoardMagnifierContent||!lineBoardPages.length)return;lineBoardMagnifierContent.innerHTML='';const rect=lineBoardStage.getBoundingClientRect();const clone=lineBoardPages[lineBoardIndex].cloneNode(true);clone.classList.add('active');clone.style.width=Math.max(rect.width,lineBoardStage.clientWidth)+'px';clone.style.height=Math.max(rect.height,lineBoardStage.clientHeight)+'px';lineBoardMagnifierContent.appendChild(clone)}
-function updateLineBoard(index){if(!lineBoardPages.length)return;lineBoardIndex=Math.max(0,Math.min(index,lineBoardPages.length-1));lineBoardPages.forEach((page,i)=>page.classList.toggle('active',i===lineBoardIndex));if(lineBoardCounter)lineBoardCounter.textContent=String(lineBoardIndex+1).padStart(2,'0')+' / '+String(lineBoardPages.length).padStart(2,'0');if(lineBoardPrev)lineBoardPrev.disabled=lineBoardIndex===0;if(lineBoardNext){lineBoardNext.disabled=false;lineBoardNext.setAttribute('aria-label',lineBoardIndex===lineBoardPages.length-1?'进入后续叙事':'下一页')}lineBoardPills.forEach((pill,i)=>pill.classList.toggle('active',i===lineBoardIndex));renderLineBoardMagnifierContent();hideLineBoardMagnifier()}
-function nextLineBoardPage(){if(lineBoardIndex>=lineBoardPages.length-1){scrollToSection('strategyFlow');return}updateLineBoard(lineBoardIndex+1)}
-function prevLineBoardPage(){updateLineBoard(lineBoardIndex-1)}
-function updateLineBoardMagnifier(event){if(!lineBoardStage||!lineBoardMagnifier||!lineBoardMagnifierContent)return;const rect=lineBoardStage.getBoundingClientRect();const x=event.clientX-rect.left,y=event.clientY-rect.top;if(x<0||x>rect.width||y<0||y>rect.height){hideLineBoardMagnifier();return}lineBoardMagnifier.classList.add('active');lineBoardMagnifier.style.left=x+'px';lineBoardMagnifier.style.top=y+'px';lineBoardMagnifierContent.style.width=rect.width+'px';lineBoardMagnifierContent.style.height=rect.height+'px';const tx=lineBoardMagSize/2-x*lineBoardMagZoom,ty=lineBoardMagSize/2-y*lineBoardMagZoom;lineBoardMagnifierContent.style.transform='translate('+tx+'px,'+ty+'px) scale('+lineBoardMagZoom+')'}
-function handleLineBoardStageClick(event){if(!lineBoardStage)return;const rect=lineBoardStage.getBoundingClientRect();const offsetX=event.clientX-rect.left;if(offsetX>rect.width*.58)nextLineBoardPage();else if(offsetX<rect.width*.42)prevLineBoardPage()}
-function initLineBoard(){if(!lineBoardPages.length)return;updateLineBoard(0);if(lineBoardPrev)lineBoardPrev.addEventListener('click',prevLineBoardPage);if(lineBoardNext)lineBoardNext.addEventListener('click',nextLineBoardPage);lineBoardPills.forEach((pill,index)=>pill.addEventListener('click',()=>updateLineBoard(index)));if(lineBoardStage){lineBoardStage.addEventListener('click',handleLineBoardStageClick);if(window.matchMedia('(pointer:fine)').matches){lineBoardStage.addEventListener('pointermove',updateLineBoardMagnifier);lineBoardStage.addEventListener('pointerenter',event=>{renderLineBoardMagnifierContent();updateLineBoardMagnifier(event)});lineBoardStage.addEventListener('pointerleave',hideLineBoardMagnifier)}}}
-const movie=document.getElementById('movie'),poster=document.getElementById('poster'),screenText=document.getElementById('screenText'),filmCaption=document.getElementById('filmCaption');const lineStories=[{title:'消失线',desc:'从码头到安来市商业街，流动被突然截断，过去的喧闹变成等待与停滞。',image:'assets/node-pier.jpg',tags:['码头','安来市商业街','等船','迁徙','停滞'],quote:'“船停了本身是一个循环的闭环，现在断了，到这边死不动了。”',quoteMeta:'安来市商业街访谈',cards:['A1 旧日喧嚣：市场还亮着灯，但人流开始退场。','A2 等待船笛：码头保留了路径，却失去抵达。']},{title:'折叠线',desc:'学校、书院与幼儿园在同一片区叠加，童年与当下不断互相照亮。',image:'assets/node-primary-school.jpg',tags:['小学','书院','幼儿园','上学','代际记忆'],quote:'“小学原来在村里面更深处的地方，现在搬到路边来了。”',quoteMeta:'小学迁移访谈',cards:['B1 童影穿廊：上学路径被拉长，尺度出现轻微错位。','B2 书声未远：旧场所转化后，回声仍留在走廊和台阶。']},{title:'变速线',desc:'古村巷道、榕树公园和深井公园把速度放慢，日常在停留里重新被感知。',image:'assets/node-banyan-tree-park.jpg',tags:['古村','榕树公园','深井公园','停留','慢节奏'],quote:'“小孩放学后会去村里的时光公园或中山公园玩。”',quoteMeta:'公园日常访谈',cards:['C1 坡间斜阳：巷道与树影把经过变成停顿。','C2 草间童趣：玩耍路径不再直线，而是反复回到同一片树下。']}];let currentLineStoryIndex=0;function renderLineStory(index){const item=lineStories[index];if(!item)return;currentLineStoryIndex=index;document.getElementById('lineImage').src=item.image;document.getElementById('lineTitle').textContent=item.title;document.getElementById('lineDesc').textContent=item.desc;document.getElementById('lineTags').innerHTML=item.tags.map(tag=>'<span class="line-tag">'+tag+'</span>').join('');document.getElementById('lineQuote').innerHTML=item.quote+'<small>'+item.quoteMeta+'</small>';document.getElementById('lineCards').innerHTML=item.cards.map(text=>'<div class="line-item">'+text+'</div>').join('');document.querySelectorAll('.line-btn').forEach((button,i)=>button.classList.toggle('active',i===index));}function initNarrativeLines(){const buttons=[...document.querySelectorAll('.line-btn')];if(!buttons.length)return;buttons.forEach((button,index)=>button.addEventListener('click',()=>renderLineStory(index)));renderLineStory(0);} 
+const movie=document.getElementById('movie'),poster=document.getElementById('poster'),screenText=document.getElementById('screenText'),filmCaption=document.getElementById('filmCaption');
 function showFilmFallback(src,caption,title='路径片段'){movie.pause();movie.onerror=null;movie.removeAttribute('src');movie.load();movie.style.display='none';poster.style.display='block';screenText.style.display='block';screenText.innerHTML=`<h4>${title}素材待补</h4><p>${caption}。当前没有找到 ${src}，请将真实漫游视频放入 assets 文件夹；页面会先保留这条路径，方便继续完整浏览。</p>`;filmCaption.textContent=`缺失文件：${src}｜路径说明已保留，可先查看图谱关系或切换其他路径。`;filmCaption.classList.remove('ready')}
 function playMovie(src,caption,title='路径片段'){poster.style.display='none';screenText.style.display='none';movie.style.display='block';movie.onerror=()=>showFilmFallback(src,caption,title);movie.oncanplay=()=>filmCaption.classList.add('ready');movie.src=src;movie.load();const playing=movie.play();if(playing)playing.catch(()=>{filmCaption.textContent=caption+'｜浏览器阻止自动播放时，请点击播放器的播放按钮。'});filmCaption.textContent=caption+'｜点击其他路径可切换剧情线。'}
 function runDreamStoryTyping(){const story=document.getElementById('dreamStory');if(!story)return;const full=story.dataset.fulltext||story.textContent||'';story.textContent='';story.classList.add('typing');let i=0;const timer=setInterval(()=>{story.textContent+=full[i]||'';i+=1;if(i>=full.length){clearInterval(timer);setTimeout(()=>story.classList.remove('typing'),260)}},45)}
@@ -433,7 +324,7 @@ updateRelationState();
 updateWalk(0);
 initBookFlip();
 initStrategyGallery();
-initKnowledgeMagnifier();initLineBoard();initNarrativeLines();
+initKnowledgeMagnifier();
 watchChapter01Explain();
 runIntro();
 </script>
