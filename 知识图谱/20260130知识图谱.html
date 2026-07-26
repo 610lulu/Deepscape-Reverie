@@ -746,10 +746,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // 3. 加载数据
-  let graphData = await dbManager.loadData();
+  let graphData = null;
+  try {
+    graphData = await dbManager.loadData();
+  } catch (error) {
+    console.warn('IndexedDB is unavailable; using the built-in graph data.', error);
+  }
   if (!graphData || graphData.nodes.length === 0) {
     graphData = JSON.parse(JSON.stringify(defaultGraph)); // 深拷贝
-    await dbManager.saveData(graphData);
+    try {
+      await dbManager.saveData(graphData);
+    } catch (error) {
+      console.warn('Graph data could not be cached locally.', error);
+    }
   }
   graphData = normalizeGraphTriples(graphData);
   // 清理：删除指定节点及其相关连线（兼容旧缓存数据）
